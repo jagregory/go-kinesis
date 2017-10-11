@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -227,6 +228,15 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 	request.Header.Set("Content-Type", "application/x-amz-json-1.1")
 	request.Header.Set("X-Amz-Target", fmt.Sprintf("%s_%s.%s", kinesis.getStreamType(), kinesis.getVersion(), params[ActionKey]))
 	request.Header.Set("User-Agent", "Golang Kinesis")
+
+	sv := &Service{
+		Name:   strings.ToLower(kinesis.getStreamType()),
+		Region: kinesis.region,
+	}
+
+	if err := sv.Sign(kinesis.client.auth, request); err != nil {
+		return err
+	}
 
 	// response
 	response, err := kinesis.client.Do(request)
